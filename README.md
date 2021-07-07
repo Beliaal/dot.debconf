@@ -1,2 +1,2 @@
 # dot.debconf
-dotfiles for debian
+personal dotfiles for debian
