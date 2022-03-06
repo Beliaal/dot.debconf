@@ -1,4 +1,4 @@
-# debian stable-backports repositories, apt-cache safe.
-deb http://deb.debian.org/debian stable-backports main contrib non-free
-deb-src http://deb.debian.org/debian stable-backports main contrib non-free
+# debian buster-backports repositories, apt-cache safe.
+deb http://deb.debian.org/debian buster-backports main contrib non-free
+deb-src http://deb.debian.org/debian buster-backports main contrib non-free
 
