@@ -1,0 +1,7 @@
+# debian stable main repository, apt-cache safe...
+deb http://deb.debian.org/debian/ stable main
+deb-src http://deb.debian.org/debian/ stable main
+
+# stable-updates, previously known as 'volatile'
+deb http://deb.debian.org/debian/ stable-updates main
+deb-src http://deb.debian.org/debian/ stable-updates main
