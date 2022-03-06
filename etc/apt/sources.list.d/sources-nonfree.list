@@ -1,10 +1,7 @@
-deb http://deb.debian.org/debian/ buster non-free
-deb-src http://deb.debian.org/debian/ buster non-free
+# debian stable main repository, apt-cache safe...
+deb http://deb.debian.org/debian/ stable non-free
+deb-src http://deb.debian.org/debian/ stable non-free
 
-deb http://security.debian.org/debian-security buster/updates non-free
-deb-src http://security.debian.org/debian-security buster/updates non-free
-
-# buster-updates, previously known as 'volatile'
-deb http://deb.debian.org/debian/ buster-updates non-free
-deb-src http://deb.debian.org/debian/ buster-updates non-free
-
+# stable-updates, previously known as 'volatile'
+deb http://deb.debian.org/debian/ stable-updates non-free
+deb-src http://deb.debian.org/debian/ stable-updates non-free
