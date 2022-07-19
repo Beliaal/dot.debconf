@@ -1,6 +1,6 @@
 # This is Git's per-user configuration file.
 [user]
-#	name = <username>									# Please adapt and uncomment the following lines:
+#	name = <username>								# Please adapt and uncomment the following lines:
 #	email = <email>									# Please adapt and uncomment the following lines:
 [credential]
 	helper = store
@@ -9,6 +9,8 @@
 	tabsize = 2
 [push]
 	default = current
+[pull]
+	rebase = true
 [merge]
 	summary = true
 	conflictstyle = diff3
@@ -22,7 +24,3 @@
 [alias]
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
 	lol = log --graph --decorate --pretty=oneline --abbrev-commit
-
-# Disabled....
-#[commit]
-#	template = ~/.git-commit
