@@ -1,25 +1,17 @@
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
 	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-	alias ls='ls --color=auto'
+	alias dir='dir --color=auto'
+	alias vdir='vdir --color=auto'
+
 	alias ll='ls -lAh'
-	alias la='ls -A'
-	alias l='ls -CA'
+	alias l='ls -CF'
+
 	alias grep='grep --color=auto'
 	alias fgrep='fgrep --color=auto'
 	alias egrep='egrep --color=auto'
-#  alias dmesg='/bin/dmesg --color=always | less -R'
+	alias dmesg='/bin/dmesg -H'
 fi
-
-# Replace top with htop if installed
-#if [ -x /usr/bin/htop ]; then
-#  alias top='htop'
-#fi
-
-# uconf alias
-alias uconf='/usr/bin/git --git-dir=$HOME/.uconf/ --work-tree=$HOME'
-alias uconfs='/usr/bin/git --git-dir=$HOME/.uconf/ --work-tree=$HOME status'
-alias uconfa='/usr/bin/git --git-dir=$HOME/.uconf/ --work-tree=$HOME add'
 
 # Two cd aliases
 alias ..='cd ..'
