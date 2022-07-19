@@ -1,16 +1,14 @@
 # .bash_ext - extends bashrc with more settings without changing/updating the original
 
 shopt -s cmdhist
-shopt -s globstar 											# Sets pattern "**" used in a pathname expansion context will  match all files and <0 directories
-HISTSIZE=100000   											# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTFILESIZE=200000				
+shopt -s globstar 								# Sets pattern "**" used in a pathname expansion context will  match all files and <0 directories
+HISTSIZE=100000   								# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTFILESIZE=200000
 bind 'set bell-style visible' 							# Sets the bell to visible
-#bind 'set bell-style none'								# Sets the bell to none, for no beep at all
-
-#TERM=xterm
+#bind 'set bell-style none'							# Sets the bell to none, for no beep at all
 
 # Enable git-prompt (__git_ps1)
-if test "${BASH+set}" && test "${PS1+set}"; then	# Interactive!
+if test "${BASH+set}" && test "${PS1+set}"; then				# Interactive!
 	gitexecdir=$(git --exec-path)
 	if test -r "$gitexecdir/git-sh-prompt)"; then
 		. "$gitexecdir/git-sh-prompt"
