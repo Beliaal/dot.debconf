@@ -24,3 +24,11 @@
 [alias]
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
 	lol = log --graph --decorate --pretty=oneline --abbrev-commit
+	resetorigin = !git fetch origin && git reset --hard origin/master && git clean -f -d
+	resetupstream = !git fetch upstream && git reset --hard upstream/master && git clean -f -d
+	rinse = !git submodule foreach --recursive git clean -xfd && git submodule sync --recursive && git restore . --recurse-submodules
+[core]
+	autocrlf = false
+	eol = native
+	ignorecase = false
+	symlinks = false
