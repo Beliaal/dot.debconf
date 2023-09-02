@@ -1,0 +1,11 @@
+# debian stable main repository, apt-cache safe...
+deb http://deb.debian.org/debian/ stable non-free-firmware
+deb-src http://deb.debian.org/debian/ stable non-free-firmware
+
+# stable-updates, previously known as 'volatile'
+deb http://deb.debian.org/debian/ stable-updates non-free-firmware
+deb-src http://deb.debian.org/debian/ stable-updates non-free-firmware
+
+# debian-security stable...
+deb http://security.debian.org/debian-security stable-security non-free-firmware
+deb-src http://security.debian.org/debian-security stable-security non-free-firmware
