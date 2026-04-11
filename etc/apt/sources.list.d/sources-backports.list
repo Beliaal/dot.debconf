@@ -1,4 +1,4 @@
-# debian buster-backports repositories, apt-cache safe.
-deb http://deb.debian.org/debian buster-backports main contrib non-free
-deb-src http://deb.debian.org/debian buster-backports main contrib non-free
+# debian trixie-backports repositories, apt-cache-ng safe.
+deb http://deb.debian.org/debian trixie-backports main contrib non-free
+deb-src http://deb.debian.org/debian trixie-backports main contrib non-free
 
