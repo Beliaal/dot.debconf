@@ -12,4 +12,4 @@ personal dotfiles for debian
   * not too happy with the setup. it works. room for improvement...
 
 # Packages:
-command-not-found git mc
+command-not-found git mc bash-completion plocate
