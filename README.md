@@ -1,8 +1,12 @@
 # dot.debconf
 personal dotfiles for debian
 
-* /etc/apt/sources.list is unisex (debian stable), but some others are is not. Backports/Updates must be updated for each version.
-  * Currently: trixie-backports and trixie-updates
+* /etc/apt/sources.list.d/debian.sources is now completely unisex (debian stable) and should work over version upgrades.Also updated to the new format, and a single file.
+  * stable
+  * stable-updates
+  * proposed-updates
+  * stable-backports
+  * stable-security
 * make sure to copy as root user to not screw up file ownership.
 
 # TODO:
