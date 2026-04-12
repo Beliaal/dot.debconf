@@ -1,3 +1,0 @@
-# debian trixie-updates repositories, apt-cache-ng safe.
-deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
-deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
