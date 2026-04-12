@@ -10,3 +10,6 @@ personal dotfiles for debian
 * moar
 * fix /etc/skel/*
   * not too happy with the setup. it works. room for improvement...
+
+# Packages:
+command-not-found git mc
