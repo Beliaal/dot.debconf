@@ -23,22 +23,6 @@ else
 	fi
 fi
 
-# Unused....
-# show_spinner() {
-#	local -r pid="${1}"
-#	local -r delay='0.75'
-#	local spinstr='\|/-'
-#	local temp
-#	while ps a | awk '{print $1}' | grep -q "${pid}"; do
-#		temp="${spinstr#?}"
-#		printf " [%c]  " "${spinstr}"
-#		spinstr=${temp}${spinstr%"${temp}"}
-#		sleep "${delay}"
-#		printf "\b\b\b\b\b\b"
-#	done
-#	printf "    \b\b\b\b"
-# }
-
 # Check if a debian package is installed...
 installed() {
 	if [[ -n $1 ]]; then
@@ -56,20 +40,6 @@ installed() {
 		printf "Need a package to check for... \n"
 		printf "Usage: installed <nameofdebpackage> \n"
 	fi
-}
-
-# Create dir and directly enter it.
-mcd() {
-	mkdir -p $1
-	cd $1
-}
-
-get_dir() {
-	printf "%s" $(pwd | sed "s:$HOME:~:")
-}
-
-get_sha() {
-	git rev-parse --short HEAD 2>/dev/null
 }
 
 # Bash function displays a table with ready-to-copy escape codes.
@@ -100,15 +70,6 @@ colors() {
 		echo
 	done
 }
-
-# enable bash completion in interactive shells
-if ! shopt -oq posix; then
-	if [ -f /usr/share/bash-completion/bash_completion ]; then
-		. /usr/share/bash-completion/bash_completion
-	elif [ -f /etc/bash_completion ]; then
-		. /etc/bash_completion
-	fi
-fi
 
 function _git_prompt() {
 	local git_status="$(git status -unormal 2>&1)"
