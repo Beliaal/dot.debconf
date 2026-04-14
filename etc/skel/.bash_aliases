@@ -17,12 +17,6 @@ fi
 alias ..='cd ..'
 alias ...='cd ../../'
 
-# Alias to add or edit aliases
-alias realias='nano ~/.bash_aliases && source ~/.bash_aliases'
-
-# Alias to add or edit functions
-alias refunct='nano ~/.bash_functions && source ~/.bash_functions'
-
 # A few git aliases
 alias galias="echo -e 'gs = git status\t\tga = git add \
 \ngb = git branch\t\tgc = git commit -m \
@@ -49,3 +43,5 @@ alias get='git '
 # Finish off by running the last files referenced in dot.debconf skel
 [[ -f ~/.bash_ext ]] && source ~/.bash_ext
 [[ -f ~/.bash_functions ]] && source ~/.bash_functions
+[[ -f ~/.git-completion.bash ]] && source ~/.git-completion.bash
+[[ -f ~/.git-prompt.sh ]] && source ~/.git-prompt.sh
