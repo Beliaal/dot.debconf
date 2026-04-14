@@ -23,55 +23,21 @@ else
 	fi
 fi
 
-show_spinner() {
-	local -r pid="${1}"
-	local -r delay='0.75'
-	local spinstr='\|/-'
-	local temp
-	while ps a | awk '{print $1}' | grep -q "${pid}"; do
-		temp="${spinstr#?}"
-		printf " [%c]  " "${spinstr}"
-		spinstr=${temp}${spinstr%"${temp}"}
-		sleep "${delay}"
-		printf "\b\b\b\b\b\b"
-	done
-	printf "    \b\b\b\b"
-}
-
-# Update all update-files
-update() {
-	printf "\n"
-
-	printf "\e[1;37mRunning \e[1;31mupdate-command-not-found\t\e[1;37m...\t\e[0m"
-	if [[ ! $(sudo /usr/sbin/update-command-not-found >/dev/null 2>&1) ]]; then
-		printf "\e[1;32mDone\e[1;37m!\e[0m\n"
-	else
-		printf "\e[1;31mFAILED...\e[0m\n"
-	fi
-
-	printf "\e[1;37mRunning \e[1;31mupdate-pciids\t\t\t\e[1;37m...\t\e[0m"
-	if [[ ! $(sudo update-pciids >/dev/null 2>&1) ]]; then
-		printf "\e[1;32mDone\e[1;37m!\e[0m\n"
-	else
-		printf "\e[1;31mFAILED \e[1;37m...\e[0m\n"
-	fi
-
-	printf "\e[1;37mRunning \e[1;31mupdate-usbids\t\t\t\e[1;37m...\t\e[0m"
-	if [[ ! $(sudo update-usbids >/dev/null 2>&1) ]]; then
-		printf "\e[1;32mDone\e[1;37m!\e[0m\n"
-	else
-		printf "\e[1;31mFAILED \e[1;37m...\e[0m\n"
-	fi
-
-	printf "\e[1;37mRunning \e[1;31mupdatedb\t\t\t\e[1;37m...\t\e[0m"
-	if [[ ! $(sudo updatedb >/dev/null 2>&1) ]]; then
-		printf "\e[1;32mDone\e[1;37m!\e[0m\n"
-	else
-		printf "\e[1;31m\tFAILED \e[1;37m...\e[0m\n"
-	fi
-
-	printf "\n"
-}
+# Unused....
+# show_spinner() {
+# 	local -r pid="${1}"
+# 	local -r delay='0.75'
+# 	local spinstr='\|/-'
+# 	local temp
+# 	while ps a | awk '{print $1}' | grep -q "${pid}"; do
+# 		temp="${spinstr#?}"
+# 		printf " [%c]  " "${spinstr}"
+# 		spinstr=${temp}${spinstr%"${temp}"}
+# 		sleep "${delay}"
+# 		printf "\b\b\b\b\b\b"
+# 	done
+# 	printf "    \b\b\b\b"
+# }
 
 # Check if a debian package is installed...
 installed() {
@@ -134,6 +100,15 @@ colors() {
 		echo
 	done
 }
+
+# enable bash completion in interactive shells
+if ! shopt -oq posix; then
+	if [ -f /usr/share/bash-completion/bash_completion ]; then
+		. /usr/share/bash-completion/bash_completion
+	elif [ -f /etc/bash_completion ]; then
+		. /etc/bash_completion
+	fi
+fi
 
 function _git_prompt() {
 	local git_status="$(git status -unormal 2>&1)"
