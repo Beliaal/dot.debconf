@@ -42,6 +42,61 @@ installed() {
 	fi
 }
 
+# Function that displays current battery charge and status. Supports both BAT0 and BAT1...
+bat() {
+    local bat capacity status color reset icon scolor
+
+    bat=$(find /sys/class/power_supply -maxdepth 1 -type l -name 'BAT*' | head -n 1)
+
+    local green='\033[0;32m'
+    local yellow='\033[1;33m'
+    local red='\033[0;31m'
+    local blue='\033[0;34m'
+    reset='\033[0m'
+
+    if [[ -z "$bat" || ! -r "$bat/capacity" || ! -r "$bat/status" ]]; then
+        echo -e "${red}Battery: not found${reset}"
+        return 1
+    fi
+
+    capacity=$(cat "$bat/capacity")
+    status=$(cat "$bat/status")
+
+    if (( capacity >= 60 )); then
+        color="$green"
+    elif (( capacity >= 30 )); then
+        color="$yellow"
+    else
+        color="$red"
+    fi
+
+    case "$status" in
+        Charging)
+            icon="⚡"
+			scolor="$yellow"
+            ;;
+        Discharging)
+            icon="🔋"
+			scolor="$red"
+            ;;
+        Full)
+            icon="✓"
+            color="$green"
+			scolor="$green"
+            ;;
+        "Not charging")
+            icon="⏸"
+            color="$blue"
+			scolor="$blue"
+            ;;
+        *)
+            icon="?"
+            ;;
+    esac
+
+    echo -e "Battery: ${color}${capacity}%${reset} - ${scolor}${status}${reset} ${icon}"
+}
+
 # Bash function displays a table with ready-to-copy escape codes.
 colors() {
 	local fgc bgc vals seq0
@@ -71,7 +126,7 @@ colors() {
 	done
 }
 
-function _git_prompt() {
+_git_prompt() {
 	local git_status="$(git status -unormal 2>&1)"
 	if ! [[ "$git_status" =~ not\ a\ git\ repo ]]; then
 		if [[ "$git_status" =~ nothing\ to\ commit ]]; then
@@ -96,7 +151,7 @@ function _git_prompt() {
 	fi
 }
 
-function _prompt_command() {
+_prompt_command() {
 	if [[ "$TERM" = "linux" ]]; then
 		# Todo if we are at a "linux" type terminal (8/16 colors)
 		PS1="$(_git_prompt)\[\e[0;34m\][\[\e[0;36m\]\u$ATCLR@\[\e[0;36m\]\h\[\e[0;34m\]]\[\e[0;37m\]\w\[\e[0m\]> "
