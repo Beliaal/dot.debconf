@@ -1,11 +1,42 @@
-# .bash_ext - extends bashrc with more settings without changing .bashrc
+# ==============================================================================
+# Bash shell behaviour extensions
+# ==============================================================================
+#
+# Sourced from ~/.bash_aliases.
+#
+# Provides:
+#   - Improved history behaviour
+#   - Recursive globbing with **
+#   - Visible terminal bell
+#   - Coloured GCC diagnostics
+#
+# ==============================================================================
 
+
+# Save multi-line commands as a single history entry.
 shopt -s cmdhist
-shopt -s globstar 										# Sets pattern "**" used in a pathname expansion context will  match all files and <0 directories
-HISTSIZE=100000   										# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTFILESIZE=200000
-bind 'set bell-style visible' 							# Sets the bell to visible
-#bind 'set bell-style none'								# Sets the bell to none, for no beep at all
 
-# colored GCC warnings and errors
+# Append to the history file instead of overwriting it.
+shopt -s histappend
+
+# Enable recursive globbing with **.
+# Example: ls **/*.txt
+shopt -s globstar
+
+
+# Bash history size.
+# HISTSIZE controls the number of commands kept in memory.
+# HISTFILESIZE controls the number of commands saved to the history file.
+HISTSIZE=100000
+HISTFILESIZE=200000
+
+
+# Use a visible bell instead of an audible beep.
+bind 'set bell-style visible'
+
+# Alternative: disable the bell entirely.
+# bind 'set bell-style none'
+
+
+# Coloured GCC warnings and errors.
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'

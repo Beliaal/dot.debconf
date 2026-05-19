@@ -1,101 +1,138 @@
-# Change the color of the "@" in the prompt to red if user is root.
-if [[ $EUID -ne 0 ]]; then
-	# UDI = !root, set color to Bold High Intensity Blue
-	if [[ $TERM = "linux" ]]; then
-		ATCLR="\[\e[0;34m\]"
-	fi
-	if [[ $TERM = "xterm" ]]; then
-		ATCLR="\[\e[1;94m\]"
-	fi
-	if [[ $TERM = "xterm-256color" ]]; then
-		ATCLR="\[\e[1;94m\]"
-	fi
-else
-	# UDI = !root, set color to Bold High Intensity Blue
-	if [[ $TERM = "linux" ]]; then
-		ATCLR="\[\e[0;31m\]"
-	fi
-	if [[ $TERM = "xterm" ]]; then
-		ATCLR="\[\e[1;91m\]"
-	fi
-	if [[ $TERM = "xterm-256color" ]]; then
-		ATCLR="\[\e[1;91m\]"
-	fi
-fi
+# ==============================================================================
+# Bash shell helpers and prompt customisation
+# ==============================================================================
+#
+# Sourced from ~/.bash_aliases.
+#
+# Provides:
+#   - Custom coloured prompt with Git branch/status indicator
+#   - Root-aware prompt colouring
+#   - Debian package check helper: installed <package>
+#   - Battery status helper: bat
+#   - ANSI colour table helper: colors
+#
+# Notes:
+#   - PROMPT_COMMAND rebuilds PS1 before each prompt.
+#   - Basic ANSI colours are used on the Linux console.
+#   - Brighter ANSI colours are used in most terminal emulators.
+#
+# ==============================================================================
+#
+# User-configurable settings
+# ==============================================================================
 
-# Check if a debian package is installed...
+# Battery warning thresholds used by bat().
+# Values are percentages.
+BATTERY_GREEN_THRESHOLD=60
+BATTERY_YELLOW_THRESHOLD=30
+# Battery is shown as red below BATTERY_YELLOW_THRESHOLD.
+
+
+# Color of "@" in the prompt - blue for normal users, red for root
+case "$TERM:$EUID" in
+	linux:0)
+		ATCLR="\[\e[0;31m\]"
+		;;
+	linux:*)
+		ATCLR="\[\e[0;34m\]"
+		;;
+	*:0)
+		ATCLR="\[\e[1;91m\]"
+		;;
+	*)
+		ATCLR="\[\e[1;94m\]"
+		;;
+esac
+
+
+# Check whether a Debian package is installed.
 installed() {
-	if [[ -n $1 ]]; then
-		STATUS=$(dpkg-query -W -f='${Status}' $1 2>/dev/null | grep -c "ok installed")
-		if [[ $STATUS -eq 1 ]]; then
-			printf "\e[1;37m\"\e[1;32m$1\e[1;37m\"\e[0m is installed on this system... \n"
-		else
-			printf "\e[1;37m\"\e[1;31m$1\e[1;37m\"\e[0m is not installed on this system... \n\n"
-			APTRESULT=$(apt-cache search $1 | sed 15q)
-			if [[ -z $APTRESULT ]]; then
-				printf "... and seems to be missing in the repo?..."
-			fi
-		fi
+	local package status apt_result
+
+	package="$1"
+
+	if [[ -z "$package" ]]; then
+		printf "Need a package to check for...\n"
+		printf "Usage: installed <nameofdebpackage>\n"
+		return 1
+	fi
+
+	status="$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -c "ok installed")"
+
+	if [[ "$status" -eq 1 ]]; then
+		printf '\e[1;37m"\e[1;32m%s\e[1;37m"\e[0m is installed on this system...\n' "$package"
 	else
-		printf "Need a package to check for... \n"
-		printf "Usage: installed <nameofdebpackage> \n"
+		printf '\e[1;37m"\e[1;31m%s\e[1;37m"\e[0m is not installed on this system...\n\n' "$package"
+
+		apt_result="$(apt-cache search "$package" | sed 15q)"
+		if [[ -z "$apt_result" ]]; then
+			printf "... and seems to be missing in the repo?...\n"
+		else
+			printf "Possible matches:\n%s\n" "$apt_result"
+		fi
 	fi
 }
+
 
 # Function that displays current battery charge and status. Supports both BAT0 and BAT1...
 bat() {
-    local bat capacity status color reset icon scolor
+	local bat capacity status color icon scolor
+	local green yellow red blue reset
+	local green_threshold="${BATTERY_GREEN_THRESHOLD:-60}"
+	local yellow_threshold="${BATTERY_YELLOW_THRESHOLD:-30}"
 
-    bat=$(find /sys/class/power_supply -maxdepth 1 -type l -name 'BAT*' | head -n 1)
+	green='\033[0;32m'
+	yellow='\033[1;33m'
+	red='\033[0;31m'
+	blue='\033[0;34m'
+	reset='\033[0m'
 
-    local green='\033[0;32m'
-    local yellow='\033[1;33m'
-    local red='\033[0;31m'
-    local blue='\033[0;34m'
-    reset='\033[0m'
+	bat=$(find /sys/class/power_supply -maxdepth 1 -type l -name 'BAT*' | head -n 1)
 
-    if [[ -z "$bat" || ! -r "$bat/capacity" || ! -r "$bat/status" ]]; then
-        echo -e "${red}Battery: not found${reset}"
-        return 1
-    fi
+	if [[ -z "$bat" || ! -r "$bat/capacity" || ! -r "$bat/status" ]]; then
+		echo -e "${red}Battery: not found${reset}"
+		return 1
+	fi
 
-    capacity=$(cat "$bat/capacity")
-    status=$(cat "$bat/status")
+	capacity=$(cat "$bat/capacity")
+	status=$(cat "$bat/status")
 
-    if (( capacity >= 60 )); then
-        color="$green"
-    elif (( capacity >= 30 )); then
-        color="$yellow"
-    else
-        color="$red"
-    fi
+	if (( capacity >= green_threshold )); then
+		color="$green"
+	elif (( capacity >= yellow_threshold )); then
+		color="$yellow"
+	else
+		color="$red"
+	fi
 
-    case "$status" in
-        Charging)
-            icon="⚡"
+	case "$status" in
+		Charging)
+			icon="⚡"
 			scolor="$yellow"
-            ;;
-        Discharging)
-            icon="🔋"
+			;;
+		Discharging)
+			icon="🔋"
 			scolor="$red"
-            ;;
-        Full)
-            icon="✓"
-            color="$green"
+			;;
+		Full)
+			icon="✓"
+			color="$green"
 			scolor="$green"
-            ;;
-        "Not charging")
-            icon="⏸"
-            color="$blue"
+			;;
+		"Not charging")
+			icon="⏸"
+			color="$blue"
 			scolor="$blue"
-            ;;
-        *)
-            icon="?"
-            ;;
-    esac
+			;;
+		*)
+			icon="?"
+			scolor="$reset"
+			;;
+	esac
 
-    echo -e "Battery: ${color}${capacity}%${reset} - ${scolor}${status}${reset} ${icon}"
+	echo -e "Battery: ${color}${capacity}%${reset} - ${scolor}${status}${reset} ${icon}"
 }
+
 
 # Bash function displays a table with ready-to-copy escape codes.
 colors() {
@@ -126,44 +163,100 @@ colors() {
 	done
 }
 
-_git_prompt() {
-	local git_status="$(git status -unormal 2>&1)"
-	if ! [[ "$git_status" =~ not\ a\ git\ repo ]]; then
-		if [[ "$git_status" =~ nothing\ to\ commit ]]; then
-			local ansi=42 # Green background
-		#local ansi=102   # High Intensity Green background
-		elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
-			# local ansi=43   # Yellow background
-			local ansi=103 # High Intensity Yellow background
-		else
-			local ansi=41 # Red background
-		# local ansi=45   # Purple background
-		# local ansi=101  # High Intensity Red background
-		fi
-		if [[ "$git_status" =~ On\ branch\ ([^[:space:]]+) ]]; then
-			branch=${BASH_REMATCH[1]}
-			test "$branch" != master || branch=' '
-		else
-			# Detached HEAD.  (branch=HEAD is a faster alternative.)
-			branch="($(git describe --all --contains --abbrev=4 HEAD 2>/dev/null || echo HEAD))"
-		fi
-		echo -n '\[\e[0;37;'"$ansi"';1m\]'"$branch"'\[\e[0m\]'
-	fi
+
+# Show Git alias summary.
+galias() {
+	cat <<'EOF'
+Git aliases:
+
+  gs        = git status
+  ga        = git add
+  gb        = git branch
+  gc        = git commit -m
+  gd        = git diff
+  go        = git checkout
+
+Git config aliases:
+
+  git dc    = diff --cached
+  git lol   = log --graph --decorate --pretty=oneline --abbrev-commit
+  git lola  = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  git ls    = ls-files
+  git ec    = config --global -e
+  git amend = commit -a --amend
+  git bdone = checkout default branch, update, then clean merged branches
+EOF
 }
 
+
+## Colors....
+## 40   Black                     | 100  Bright black / dark gray
+## 41   Red                       | 101  Bright red
+## 42   Green                     | 102  Bright green
+## 43   Yellow / brown            | 103  Bright yellow
+## 44   Blue                      | 104  Bright blue
+## 45   Magenta / purple          | 105  Bright magenta / purple
+## 46   Cyan                      | 106  Bright cyan
+## 47   White / light gray        | 107  Bright white
+##
+## 30   Black text                | 90   Bright black / gray text
+## 31   Red text                  | 91   Bright red text
+## 32   Green text                | 92   Bright green text
+## 33   Yellow text               | 93   Bright yellow text
+## 34   Blue text                 | 94   Bright blue text
+## 35   Magenta text              | 95   Bright magenta text
+## 36   Cyan text                 | 96   Bright cyan text
+## 37   White / light gray text   | 97   Bright white text
+
+
+# Colorised git repo status, if inside a git repo.
+_git_prompt() {
+	local branch ansi status stash_marker
+
+	git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
+
+	branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null)" ||
+		branch="($(git describe --all --contains --abbrev=4 HEAD 2>/dev/null || echo HEAD))"
+
+	stash_marker=''
+	if git rev-parse --verify --quiet refs/stash >/dev/null; then
+		stash_marker='*'
+	fi
+
+	# If branch is main/master/trunk, use a single space instead of writing branch name.
+	case "$branch" in
+		master|main|trunk)
+			branch=' '
+			;;
+	esac
+
+	status="$(git status --porcelain --untracked-files=normal 2>/dev/null)"
+
+	if [[ -z "$status" ]]; then
+		ansi=42			# Green: clean
+	elif [[ -z "$(grep -v '^?? ' <<< "$status")" ]]; then
+		ansi=43			# Yellow: only untracked files
+	elif grep -qE '^(UU|AA|DD|AU|UA|DU|UD) ' <<< "$status"; then
+		ansi=45			# Magenta: merge conflict
+	else
+		ansi=41			# Red: tracked changes
+	fi
+
+	echo -n '\[\e[0;37;'"$ansi"';1m\]'"$branch$stash_marker"'\[\e[0m\]'
+}
+
+
+# PROMPT_COMMAND runs before each prompt; use it to rebuild PS1 cleanly.
 _prompt_command() {
 	if [[ "$TERM" = "linux" ]]; then
-		# Todo if we are at a "linux" type terminal (8/16 colors)
+		# Linux console: limited color support, so use safer basic ANSI colors.
 		PS1="$(_git_prompt)\[\e[0;34m\][\[\e[0;36m\]\u$ATCLR@\[\e[0;36m\]\h\[\e[0;34m\]]\[\e[0;37m\]\w\[\e[0m\]> "
-	fi
-	if [[ "$TERM" = "xterm" ]]; then
-		# We support many colors! Ie, my vanilla prompt...
-		PS1="$(_git_prompt)\[\e[1;94m\][\[\e[1;96m\]\u$ATCLR@\[\e[1;96m\]\h\[\e[1;94m\]]\[\e[1;97m\]\w\[\e[0m\]> "
-	fi
-	if [[ "$TERM" = "xterm-256color" ]]; then
-		# We support 256 colors! Ie, my vanilla prompt...
+	else
+		# Most terminal emulators: use bright colors.
 		PS1="$(_git_prompt)\[\e[1;94m\][\[\e[1;96m\]\u$ATCLR@\[\e[1;96m\]\h\[\e[1;94m\]]\[\e[1;97m\]\w\[\e[0m\]> "
 	fi
 }
 
-PROMPT_COMMAND=_prompt_command
+
+# Enable the dynamic prompt.
+PROMPT_COMMAND='_prompt_command'
