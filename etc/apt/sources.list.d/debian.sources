@@ -1,15 +1,35 @@
-# Debian Stable apt sources file, apt-cacher-ng safe.
+# Debian Stable
 Types: deb deb-src
 URIs: http://deb.debian.org/debian/
-Suites: stable stable-updates proposed-updates stable-backports
+Suites: stable stable-updates
 Components: main non-free-firmware contrib non-free
 Enabled: yes
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 
-# Security Updates
+
+# Debian Security Updates
 Types: deb deb-src
 URIs: http://deb.debian.org/debian-security/
 Suites: stable-security
 Components: main non-free-firmware contrib non-free
 Enabled: yes
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+
+# Debian Backports
+Types: deb deb-src
+URIs: http://deb.debian.org/debian/
+Suites: stable-backports
+Components: main non-free-firmware contrib non-free
+Enabled: yes
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+
+# Debian Proposed Updates
+# Usually disabled unless explicitly needed.
+Types: deb deb-src
+URIs: http://deb.debian.org/debian/
+Suites: proposed-updates
+Components: main non-free-firmware contrib non-free
+Enabled: no
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
