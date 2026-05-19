@@ -10,6 +10,7 @@
 #   - Debian package check helper: installed <package>
 #   - Battery status helper: bat
 #   - ANSI colour table helper: colors
+#   - Git alias summary helper: galias
 #
 # Notes:
 #   - PROMPT_COMMAND rebuilds PS1 before each prompt.
@@ -134,33 +135,33 @@ bat() {
 }
 
 
-# Bash function displays a table with ready-to-copy escape codes.
+# Display ANSI colour codes and examples.
 colors() {
-	local fgc bgc vals seq0
+	local code
 
-	printf "Color escapes are %s\n" '\e[${value};...;${value}m'
-	printf "Values 30..37 are \e[33mforeground colors\e[m\n"
-	printf "Values 40..47 are \e[43mbackground colors\e[m\n"
-	printf "Value  1 gives a  \e[1mbold-faced look\e[m\n\n"
+	printf "ANSI colour codes\n"
+	printf "=================\n\n"
 
-	# foreground colors
-	for fgc in {30..37}; do
-		# background colors
-		for bgc in {40..47}; do
-			fgc=${fgc#37} # white
-			bgc=${bgc#40} # black
-
-			vals="${fgc:+$fgc;}${bgc}"
-			vals=${vals%%;}
-
-			seq0="${vals:+\e[${vals}m}"
-			printf "  %-9s" "${seq0:-(default)}"
-			printf " ${seq0}TEXT\e[m"
-			printf " \e[${vals:+${vals+$vals;}}1mBOLD\e[m"
-		done
-		echo
-		echo
+	printf "Foreground text colours:\n"
+	for code in {30..37} {90..97}; do
+		printf "  %-3s  \e[%smTEXT\e[0m\n" "$code" "$code"
 	done
+
+	printf "\nBackground colours:\n"
+	for code in {40..47} {100..107}; do
+		printf "  %-3s  \e[37;%sm TEXT \e[0m\n" "$code" "$code"
+	done
+
+	printf "\nCommon style codes:\n"
+	printf "  0    reset / normal\n"
+	printf "  1    bold / bright\n"
+	printf "  4    underline\n\n"
+
+	printf "Examples:\n"
+	printf "  \\e[31mTEXT\\e[0m        red text\n"
+	printf "  \\e[1;31mTEXT\\e[0m      bold red text\n"
+	printf "  \\e[37;42mTEXT\\e[0m     white text on green background\n"
+	printf "  \\e[1;97;41mTEXT\\e[0m   bright white text on red background\n"
 }
 
 
@@ -189,26 +190,6 @@ EOF
 }
 
 
-## Colors....
-## 40   Black                     | 100  Bright black / dark gray
-## 41   Red                       | 101  Bright red
-## 42   Green                     | 102  Bright green
-## 43   Yellow / brown            | 103  Bright yellow
-## 44   Blue                      | 104  Bright blue
-## 45   Magenta / purple          | 105  Bright magenta / purple
-## 46   Cyan                      | 106  Bright cyan
-## 47   White / light gray        | 107  Bright white
-##
-## 30   Black text                | 90   Bright black / gray text
-## 31   Red text                  | 91   Bright red text
-## 32   Green text                | 92   Bright green text
-## 33   Yellow text               | 93   Bright yellow text
-## 34   Blue text                 | 94   Bright blue text
-## 35   Magenta text              | 95   Bright magenta text
-## 36   Cyan text                 | 96   Bright cyan text
-## 37   White / light gray text   | 97   Bright white text
-
-
 # Colorised git repo status, if inside a git repo.
 _git_prompt() {
 	local branch ansi status stash_marker
@@ -218,6 +199,7 @@ _git_prompt() {
 	branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null)" ||
 		branch="($(git describe --all --contains --abbrev=4 HEAD 2>/dev/null || echo HEAD))"
 
+	# Add a small marker if this repository has stashed changes.
 	stash_marker=''
 	if git rev-parse --verify --quiet refs/stash >/dev/null; then
 		stash_marker='*'
@@ -234,10 +216,10 @@ _git_prompt() {
 
 	if [[ -z "$status" ]]; then
 		ansi=42			# Green: clean
-	elif [[ -z "$(grep -v '^?? ' <<< "$status")" ]]; then
-		ansi=43			# Yellow: only untracked files
 	elif grep -qE '^(UU|AA|DD|AU|UA|DU|UD) ' <<< "$status"; then
 		ansi=45			# Magenta: merge conflict
+	elif [[ -z "$(grep -v '^?? ' <<< "$status")" ]]; then
+		ansi=43			# Yellow: only untracked files
 	else
 		ansi=41			# Red: tracked changes
 	fi
