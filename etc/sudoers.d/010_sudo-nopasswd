@@ -1,1 +1,5 @@
+# Allow members of the sudo group to run commands without a password.
+# Convenience setting for trusted personal machines only.
+# For shared or security-sensitive systems, remove this file.
+
 %sudo  ALL=(ALL) NOPASSWD: ALL

@@ -1,34 +1,47 @@
-# This is Git's per-user configuration file.
+# Per-user Git configuration.
+# Values copied from /etc/skel should be reviewed per user.
+
 [user]
 #	name = <username>								# Please adapt and uncomment the following lines:
 #	email = <email>									# Please adapt and uncomment the following lines:
-[credential]
-	helper = store
+
+# Stores credentials in plaintext in ~/.git-credentials.
+# Uncomment only on trusted personal systems.
+# [credential]
+#	helper = store
+
 [gui]
 	recentrepo = 
 	tabsize = 2
+
 [push]
 	default = current
+
 [pull]
 	rebase = true
+
 [merge]
 	summary = true
 	conflictstyle = diff3
-[help]
-	autocorrect = 1
+# [help]
+#	autocorrect = 1
+
 [rebase]
 	autoStash = true
 	autosquash = true
+
 [fetch]
 	prune = true
+
 [alias]
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
 	lol = log --graph --decorate --pretty=oneline --abbrev-commit
-	resetorigin = !git fetch origin && git reset --hard origin/master && git clean -f -d
-	resetupstream = !git fetch upstream && git reset --hard upstream/master && git clean -f -d
+	resetorigin = !git fetch origin && git reset --hard @{u} && git clean -f -d
+	resetupstream = !git fetch && git reset --hard @{u} && git clean -f -d
 	rinse = !git submodule foreach --recursive git clean -xfd && git submodule sync --recursive && git restore . --recurse-submodules
+
 [core]
 	autocrlf = false
 	eol = native
 	ignorecase = false
-	symlinks = false
+#	symlinks = false
