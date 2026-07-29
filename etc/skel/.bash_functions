@@ -77,7 +77,7 @@ installed() {
 
 # Function that displays current battery charge and status. Supports both BAT0 and BAT1...
 bat() {
-	local bat capacity status color icon scolor
+	local bat capacity status color icon scolor prompt_mode
 	local green yellow red blue reset
 	local green_threshold="${BATTERY_GREEN_THRESHOLD:-60}"
 	local yellow_threshold="${BATTERY_YELLOW_THRESHOLD:-30}"
@@ -87,10 +87,13 @@ bat() {
 	red='\033[0;31m'
 	blue='\033[0;34m'
 	reset='\033[0m'
+	prompt_mode=false
+	[[ "${1:-}" == "--prompt" ]] && prompt_mode=true
 
 	bat=$(find /sys/class/power_supply -maxdepth 1 -type l -name 'BAT*' | head -n 1)
 
 	if [[ -z "$bat" || ! -r "$bat/capacity" || ! -r "$bat/status" ]]; then
+		$prompt_mode && return 1
 		echo -e "${red}Battery: not found${reset}"
 		return 1
 	fi
@@ -104,6 +107,12 @@ bat() {
 		color="$yellow"
 	else
 		color="$red"
+	fi
+
+	if $prompt_mode; then
+		# Readline needs non-printing colour sequences enclosed in \[ and \].
+		printf '\\[%b\\]%03d%%\\[%b\\] - ' "$color" "$capacity" "$reset"
+		return
 	fi
 
 	case "$status" in
@@ -132,6 +141,12 @@ bat() {
 	esac
 
 	echo -e "Battery: ${color}${capacity}%${reset} - ${scolor}${status}${reset} ${icon}"
+}
+
+
+# Show battery information in PS1 only on systems with a readable battery.
+_battery_prompt() {
+	bat --prompt 2>/dev/null || :
 }
 
 
@@ -230,12 +245,16 @@ _git_prompt() {
 
 # PROMPT_COMMAND runs before each prompt; use it to rebuild PS1 cleanly.
 _prompt_command() {
+	local battery_prompt
+
+	battery_prompt="$(_battery_prompt)"
+
 	if [[ "$TERM" = "linux" ]]; then
 		# Linux console: limited color support, so use safer basic ANSI colors.
-		PS1="$(_git_prompt)\[\e[0;34m\][\[\e[0;36m\]\u$ATCLR@\[\e[0;36m\]\h\[\e[0;34m\]]\[\e[0;37m\]\w\[\e[0m\]> "
+		PS1="${battery_prompt}$(_git_prompt)\[\e[0;34m\][\[\e[0;36m\]\u$ATCLR@\[\e[0;36m\]\h\[\e[0;34m\]]\[\e[0;37m\]\w\[\e[0m\]> "
 	else
 		# Most terminal emulators: use bright colors.
-		PS1="$(_git_prompt)\[\e[1;94m\][\[\e[1;96m\]\u$ATCLR@\[\e[1;96m\]\h\[\e[1;94m\]]\[\e[1;97m\]\w\[\e[0m\]> "
+		PS1="${battery_prompt}$(_git_prompt)\[\e[1;94m\][\[\e[1;96m\]\u$ATCLR@\[\e[1;96m\]\h\[\e[1;94m\]]\[\e[1;97m\]\w\[\e[0m\]> "
 	fi
 }
 
