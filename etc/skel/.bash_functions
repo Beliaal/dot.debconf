@@ -15,12 +15,68 @@
 # Notes:
 #   - PROMPT_COMMAND rebuilds PS1 before each prompt.
 #   - Basic ANSI colours are used on the Linux console.
-#   - Brighter ANSI colours are used in most terminal emulators.
+#   - Bold ANSI colours are used in most terminal emulators.
 #
 # ==============================================================================
 #
 # User-configurable settings
 # ==============================================================================
+
+# -----------------------------------------------------------------------------
+# ANSI color constants
+#
+# Naming:
+#   <color>      Regular
+#   b_<color>    Bold
+#   br_<color>   Bright
+#   brb_<color>  Bright and bold
+#
+# These variables contain the actual escape sequences and can therefore be
+# printed directly using printf with %s. When used in PS1, enclose them in
+# \[ and \] so Readline does not count them as visible prompt characters.
+# -----------------------------------------------------------------------------
+
+reset=$'\e[0m'
+
+# Regular colors
+black=$'\e[0;30m'
+red=$'\e[0;31m'
+green=$'\e[0;32m'
+yellow=$'\e[0;33m'
+blue=$'\e[0;34m'
+magenta=$'\e[0;35m'
+cyan=$'\e[0;36m'
+white=$'\e[0;37m'
+
+# Bold colors
+b_black=$'\e[1;30m'
+b_red=$'\e[1;31m'
+b_green=$'\e[1;32m'
+b_yellow=$'\e[1;33m'
+b_blue=$'\e[1;34m'
+b_magenta=$'\e[1;35m'
+b_cyan=$'\e[1;36m'
+b_white=$'\e[1;37m'
+
+# Bright colors
+br_black=$'\e[0;90m'
+br_red=$'\e[0;91m'
+br_green=$'\e[0;92m'
+br_yellow=$'\e[0;93m'
+br_blue=$'\e[0;94m'
+br_magenta=$'\e[0;95m'
+br_cyan=$'\e[0;96m'
+br_white=$'\e[0;97m'
+
+# Bright and bold colors
+brb_black=$'\e[1;90m'
+brb_red=$'\e[1;91m'
+brb_green=$'\e[1;92m'
+brb_yellow=$'\e[1;93m'
+brb_blue=$'\e[1;94m'
+brb_magenta=$'\e[1;95m'
+brb_cyan=$'\e[1;96m'
+brb_white=$'\e[1;97m'
 
 # Battery warning thresholds used by bat().
 # Values are percentages.
@@ -28,20 +84,32 @@ BATTERY_GREEN_THRESHOLD=60
 BATTERY_YELLOW_THRESHOLD=30
 # Battery is shown as red below BATTERY_YELLOW_THRESHOLD.
 
+# Detect the battery once when this file is sourced. This avoids scanning sysfs
+# before every prompt on systems without a battery.
+BATTERY_PATH=''
+for power_supply in /sys/class/power_supply/BAT*; do
+	if [[ -r "$power_supply/capacity" && -r "$power_supply/status" ]]; then
+		BATTERY_PATH="$power_supply"
+		break
+	fi
+done
+unset power_supply
 
-# Color of "@" in the prompt - blue for normal users, red for root
+
+# Color of "@" in the prompt - blue for normal users, red for root.
+# Use normal colours on the Linux console and bold colours elsewhere.
 case "$TERM:$EUID" in
 	linux:0)
-		ATCLR="\[\e[0;31m\]"
+		ATCLR="\[$red\]"
 		;;
 	linux:*)
-		ATCLR="\[\e[0;34m\]"
+		ATCLR="\[$blue\]"
 		;;
 	*:0)
-		ATCLR="\[\e[1;91m\]"
+		ATCLR="\[$b_red\]"
 		;;
 	*)
-		ATCLR="\[\e[1;94m\]"
+		ATCLR="\[$b_blue\]"
 		;;
 esac
 
@@ -61,9 +129,11 @@ installed() {
 	status="$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -c "ok installed")"
 
 	if [[ "$status" -eq 1 ]]; then
-		printf '\e[1;37m"\e[1;32m%s\e[1;37m"\e[0m is installed on this system...\n' "$package"
+		printf '%s"%s%s%s"%s is installed on this system...\n' \
+			"$b_white" "$b_green" "$package" "$b_white" "$reset"
 	else
-		printf '\e[1;37m"\e[1;31m%s\e[1;37m"\e[0m is not installed on this system...\n\n' "$package"
+		printf '%s"%s%s%s"%s is not installed on this system...\n\n' \
+			"$b_white" "$b_red" "$package" "$b_white" "$reset"
 
 		apt_result="$(apt-cache search "$package" | sed 15q)"
 		if [[ -z "$apt_result" ]]; then
@@ -77,26 +147,22 @@ installed() {
 
 # Function that displays current battery charge and status. Supports both BAT0 and BAT1...
 bat() {
-	local bat capacity status color icon scolor
-	local green yellow red blue reset
+	local bat capacity status color icon scolor prompt_mode
 	local green_threshold="${BATTERY_GREEN_THRESHOLD:-60}"
 	local yellow_threshold="${BATTERY_YELLOW_THRESHOLD:-30}"
 
-	green='\033[0;32m'
-	yellow='\033[1;33m'
-	red='\033[0;31m'
-	blue='\033[0;34m'
-	reset='\033[0m'
+	prompt_mode=false
+	[[ "${1:-}" == "--prompt" ]] && prompt_mode=true
 
-	bat=$(find /sys/class/power_supply -maxdepth 1 -type l -name 'BAT*' | head -n 1)
+	bat="${BATTERY_PATH:-}"
 
 	if [[ -z "$bat" || ! -r "$bat/capacity" || ! -r "$bat/status" ]]; then
-		echo -e "${red}Battery: not found${reset}"
+		$prompt_mode && return 1
+		printf '%sBattery: not found%s\n' "$red" "$reset"
 		return 1
 	fi
 
 	capacity=$(cat "$bat/capacity")
-	status=$(cat "$bat/status")
 
 	if (( capacity >= green_threshold )); then
 		color="$green"
@@ -105,6 +171,14 @@ bat() {
 	else
 		color="$red"
 	fi
+
+	if $prompt_mode; then
+		# Readline needs non-printing colour sequences enclosed in \[ and \].
+		printf '\\[%s\\]%03d%%\\[%s\\]\\[%s\\] |\\[%s\\]' "$color" "$capacity" "$reset" "$br_white" "$reset"
+		return
+	fi
+
+	status=$(cat "$bat/status")
 
 	case "$status" in
 		Charging)
@@ -131,7 +205,14 @@ bat() {
 			;;
 	esac
 
-	echo -e "Battery: ${color}${capacity}%${reset} - ${scolor}${status}${reset} ${icon}"
+	printf 'Battery: %s%d%%%s |%s%s%s %s\n' \
+		"$color" "$capacity" "$reset" "$scolor" "$status" "$reset" "$icon"
+}
+
+
+# Show battery information in PS1 only on systems with a readable battery.
+_battery_prompt() {
+	bat --prompt 2>/dev/null || :
 }
 
 
@@ -224,18 +305,26 @@ _git_prompt() {
 		ansi=41			# Red: tracked changes
 	fi
 
-	echo -n '\[\e[0;37;'"$ansi"';1m\]'"$branch$stash_marker"'\[\e[0m\]'
+	printf '\\[%s\e[%sm\\]%s\\[%s\\]' \
+		"$b_white" "$ansi" "$branch$stash_marker" "$reset"
 }
 
 
 # PROMPT_COMMAND runs before each prompt; use it to rebuild PS1 cleanly.
 _prompt_command() {
+	local battery_prompt
+
+	battery_prompt=''
+	if [[ -n "${BATTERY_PATH:-}" ]]; then
+		battery_prompt="$(_battery_prompt)"
+	fi
+
 	if [[ "$TERM" = "linux" ]]; then
-		# Linux console: limited color support, so use safer basic ANSI colors.
-		PS1="$(_git_prompt)\[\e[0;34m\][\[\e[0;36m\]\u$ATCLR@\[\e[0;36m\]\h\[\e[0;34m\]]\[\e[0;37m\]\w\[\e[0m\]> "
+		# Linux console: limited color support, so use normal ANSI colours.
+		PS1="${battery_prompt}$(_git_prompt)\[$blue\][\[$cyan\]\u$ATCLR@\[$cyan\]\h\[$blue\]]\[$white\]\w\[$reset\]> "
 	else
-		# Most terminal emulators: use bright colors.
-		PS1="$(_git_prompt)\[\e[1;94m\][\[\e[1;96m\]\u$ATCLR@\[\e[1;96m\]\h\[\e[1;94m\]]\[\e[1;97m\]\w\[\e[0m\]> "
+		# Most terminal emulators: use the bold variants of the same colours.
+		PS1="${battery_prompt}$(_git_prompt)\[$b_blue\][\[$b_cyan\]\u$ATCLR@\[$b_cyan\]\h\[$b_blue\]]\[$b_white\]\w\[$reset\]> "
 	fi
 }
 
