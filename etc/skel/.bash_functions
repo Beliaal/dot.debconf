@@ -174,7 +174,7 @@ bat() {
 
 	if $prompt_mode; then
 		# Readline needs non-printing colour sequences enclosed in \[ and \].
-		printf '\\[%s\\]%03d%%\\[%s\\]\\[%s\\] |\\[%s\\]' "$color" "$capacity" "$reset" "$br_white" "$reset"
+		printf '\\[%s\\]%d%%\\[%s\\]\\[%s\\]|\\[%s\\]' "$color" "$capacity" "$reset" "$br_white" "$reset"
 		return
 	fi
 
@@ -205,7 +205,7 @@ bat() {
 			;;
 	esac
 
-	printf 'Battery: %s%d%%%s |%s%s%s %s\n' \
+	printf 'Battery: %s%d%%%s | %s%s%s %s\n' \
 		"$color" "$capacity" "$reset" "$scolor" "$status" "$reset" "$icon"
 }
 
@@ -321,10 +321,10 @@ _prompt_command() {
 
 	if [[ "$TERM" = "linux" ]]; then
 		# Linux console: limited color support, so use normal ANSI colours.
-		PS1="${battery_prompt}$(_git_prompt)\[$blue\][\[$cyan\]\u$ATCLR@\[$cyan\]\h\[$blue\]]\[$white\]\w\[$reset\]> "
+		PS1="$(_git_prompt)\[$blue\][${battery_prompt}\[$cyan\]\u$ATCLR@\[$cyan\]\h\[$blue\]]\[$white\]\w\[$reset\]> "
 	else
-		# Most terminal emulators: use the bold variants of the same colours.
-		PS1="${battery_prompt}$(_git_prompt)\[$b_blue\][\[$b_cyan\]\u$ATCLR@\[$b_cyan\]\h\[$b_blue\]]\[$b_white\]\w\[$reset\]> "
+		# Most terminal emulators: use the bold variants of the same colours.		
+		PS1="$(_git_prompt)\[$b_blue\][${battery_prompt}\[$b_cyan\]\u$ATCLR@\[$b_cyan\]\h\[$b_blue\]]\[$b_white\]\w\[$reset\]> "
 	fi
 }
 
